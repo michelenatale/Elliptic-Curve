@@ -38,9 +38,6 @@ partial class EcService
   {
     ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(min, max);
     return RngCryptoIntX(1, min, max)[0];
-    //var result = new byte[4];
-    //CRand.GetBytes(result);
-    //return int.Abs(BitConverter.ToInt32(result));
   }
 
   public static int[] RngCryptoInt32(int size)
