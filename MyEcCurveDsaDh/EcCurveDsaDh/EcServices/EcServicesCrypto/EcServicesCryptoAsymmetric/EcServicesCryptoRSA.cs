@@ -6,10 +6,6 @@ namespace michele.natale.EcCurveDsaDh;
 
 partial class EcService
 {
-  //Hier ist die Funktion für das Generieren neuer RSA-Keys
-  //..\MyEcCurveDsaDh\EcCurveDsaDh\EcServices\EcServicesCrypto\EcServicesCryptoAsymmetric\EcServicesCryptoRsaDsa.cs
-
-
   public static byte[] EncryptionRsa(ReadOnlySpan<byte> bytes, ReadOnlySpan<byte> public_key_serialize)
   {
     var rsapi = new RsaParametersInfo(public_key_serialize.ToArray());
