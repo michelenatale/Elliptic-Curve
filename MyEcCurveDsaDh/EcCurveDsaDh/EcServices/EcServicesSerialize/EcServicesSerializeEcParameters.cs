@@ -38,13 +38,8 @@ public class EcParametersInfo
     var tmp = EcService.DeserializeJson<byte[][]>(ec_serialize);
     this.D = tmp![0]; this.Q = tmp[1];
     this.C = tmp[2]; this.EcSize = tmp[3].First();
-  }
-
-  //public EcParametersInfo(EcPublicKey pubkey, bool _explicit = false)
-  //{
-  //  //pubkey.EcIndex: This value is lost here.
-  //}
-
+  } 
+  
   public byte[] SerializeEcParam()
   {
     return EcService.SerializeJson<byte[][]>([this.D, this.Q, this.C, [this.EcSize]]);
