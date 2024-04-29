@@ -63,18 +63,6 @@ partial class EcService
     throw new CryptographicException($"{nameof(VerifySignatureRsa)} has failed!");
   }
 
-  //public static byte[] SignRsa(ReadOnlySpan<byte> bytes, RSAParameters privatekey)
-  //{
-  //  using var rsa = RSA.Create();
-  //  rsa.ImportParameters(privatekey);
-  //  var hash = SHA256.HashData(bytes);
-
-  //  var hashalgoname = nameof(SHA256);
-  //  var rsa_formatter = new RSAPKCS1SignatureFormatter(rsa);
-  //  rsa_formatter.SetHashAlgorithm(hashalgoname);
-  //  return rsa_formatter.CreateSignature(hash);
-  //}
-
   public static bool VerifySignatureRsa(
       string plaintext, string signaturehex, byte[] public_key_serialize)
   {
