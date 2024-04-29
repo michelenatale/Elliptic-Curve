@@ -40,7 +40,6 @@ public class PMEI
         var hex = message_pmei
          .Split('\n', StringSplitOptions.RemoveEmptyEntries);
         var id = FromIndexHex(hex[1]);
-        //return (id, FromHex(hex[2]));
         return (id, Convert.FromHexString(hex[2]));
       }
     throw new ArgumentException($"{nameof(message_pmei)} format is false");
@@ -71,12 +70,6 @@ public class PMEI
      footer_pmei, to_lower_hex));
     return id.ID.ToString();
   }
-
-  public static void SavePmeiToFile()
-  {
-
-  }
-
 
   public static (string ID, byte[] Message) LoadPmeiFromFile(
     string filename, string header_pmei, string footer_pmei)
