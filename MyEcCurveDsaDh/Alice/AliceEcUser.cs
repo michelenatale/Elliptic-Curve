@@ -57,7 +57,7 @@ public class AliceEcUser
     var message_package = EcService.ToEcMessagePackage(
       cipher_message, sign_message_alice.Signature,
       EcPublicKey.ToEcPublicKeyPmei(ec_public_key_alice), EcCryptionAlgorithm.AES);
-    Console.WriteLine("Finally, Allice signs her secret message with the EC DSA algorithm.");
+    Console.WriteLine("Finally, Alice signs her secret message with the EC DSA algorithm.");
 
     var (h, f) = PMEI.EcSignaturPmeiHF();
     var pmei = PMEI.ToPmei(EcService.SerializeJson(message_package), h, f);
