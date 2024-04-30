@@ -24,7 +24,7 @@ public class AliceEcUser
   private static void SampleEcDsaDhAliceBob()
   {
     //1. Request temporary “Ec Public Key” from Bob.
-    var msg = "Hello Bob, please give me an EC-Key. I would like to send you a message.";
+    var msg = "Alice writes to Bob: Hello Bob, please give me an EC-Key. I would like to send you a message.";
     var ec_public_key_pmei_bob = EcPublicKeyRequest(msg);
     var ec_public_key_bob = EcPublicKey.FromEcPublicKeyPmei(ec_public_key_pmei_bob);
     var idx_pub_bob = ec_public_key_bob.EcIndex;
@@ -36,13 +36,12 @@ public class AliceEcUser
     {
       EcIndex = idx_pub_bob  //Damit nachher bei Bob filename bekannt ist.
     };
-    Console.WriteLine("Alice generates a new Elliptic Curve KeyPair (PrivateKey) with the PublicKey on Bob.");
+    Console.WriteLine("With Bob's PublicKey, Alice can now generate a new Elliptic Curve KeyPair (PrivateKey).");
 
     //3. Generate an temporary 'ECDH Shared Key' with the 'Ec Private Key'
     //   from Alice and the 'Ec Public Key' from Bob
     var ec_dh_shared_key_alice = EcService.ToSharedKey(ec_key_pair_alice, ec_public_key_bob.PublicKey);
-    Console.WriteLine("Now Alice can generate a SharedKey with the PublicKey and her new PrivateKey.");
-    Console.WriteLine("Alice uses the EC Diffie Hellman algorithm to do this.");
+    Console.WriteLine("Alice generates now a SharedKey with her new PrivateKey and Bob's PublicKey. Alice uses the EC Diffie Hellman algorithm to do this.");
 
     //4. Encrypt Alice's 'secret message' with the 'Ec Shared Key'.
     var associated = ""u8.ToArray();
@@ -51,14 +50,14 @@ public class AliceEcUser
     var iv = cipher.Skip(EcService.AES_TAG_SIZE).Take(EcService.AES_IV_SIZE).ToArray();
     string cipher_message = Convert.ToHexString(iv).ToLower() + "."
               + Convert.ToHexString(cipher).ToLower();
-    Console.WriteLine("Alice encrypts your secret message using the AES algorithm.");
+    Console.WriteLine("Alice can now encrypt your secret message with the AES algorithm and your new SharedKey.");
 
-    //5. Sign the encrypted message from Alice. 
+    //5. Sign the secret message from Alice. 
     var sign_message_alice = EcService.SignEcDsa(ec_key_pair_alice, secret_message_alice);
     var message_package = EcService.ToEcMessagePackage(
       cipher_message, sign_message_alice.Signature,
       EcPublicKey.ToEcPublicKeyPmei(ec_public_key_alice), EcCryptionAlgorithm.AES);
-    Console.WriteLine("Alice digitally signs her secret message using the EC DSA algorithm.");
+    Console.WriteLine("Finally, Allice signs her secret message with the EC DSA algorithm.");
 
     var (h, f) = PMEI.EcSignaturPmeiHF();
     var pmei = PMEI.ToPmei(EcService.SerializeJson(message_package), h, f);
@@ -112,11 +111,11 @@ public class AliceEcUser
     Console.WriteLine(public_message);
     var (id, rsaparam) = EcService.GenerateRsaKeyPairSavePmei(
       UserName, ".priv", true, 2048);
-    Console.WriteLine("Alice has generated a new Rsa-KeyPair (PrivateKey) and saved them.");
+    Console.WriteLine("Alice now generates a new Rsa KeyPair (PrivateKey) and saves it.");
 
     var pupkey = new RsaPublicKey(rsaparam, id);
     var (_, pmei) = RsaPublicKey.ToRsaPublicKeyPmei(pupkey);
-    Console.WriteLine("With the new key pair, Alice derives a PublicKey and sends it directly to Bob.");
+    Console.WriteLine("With the new Rsa KeyPair, Alice derives a PublicKey and sends it directly to Bob.");
 
     var msg = $"Alice's message: Hello {username}, welcome. As requested, my temporary asymmetric key. ";
     return (pmei, msg);
@@ -124,7 +123,7 @@ public class AliceEcUser
   public static bool ReceiveAMessage(string rsa_package)
   {
     //1.Notify Alice that a new message has arrived. 
-    Console.WriteLine($"Hello Alice, you have received a new message.");
+    Console.WriteLine($"Alice's system: Hello Alice, you have received a new message.");
 
     //2. Deserialize the package from Alice.
     //var (hs, fs) = PMEI.EcSignaturPmeiHF(false);
@@ -133,7 +132,7 @@ public class AliceEcUser
     var (_, msg) = PMEI.FromPmei(rsa_package, hs, fs);
     var msg_package = EcService.DeserializeJson<RsaMessagePackage>(msg);
     var index = msg_package!.Index;
-    Console.WriteLine("Alice extracts the complete message from Bob from the Pmei protocol ...");
+    Console.Write("Alice extracts the complete message from Bob from the Pmei protocol ");
 
     //3. Load and extract the PrivateKeyMaterial from Alice from the original PMEI-KeyMaterial.
     var fp = EcSettings.ToEcCurrentFolderUser(UserName);
@@ -141,7 +140,7 @@ public class AliceEcUser
     var (hpriv, fpriv) = PMEI.RsaPrivateKeyPmeiHF(false);
     var (_, privkey) = PMEI.LoadPmeiFromFile(fn, hpriv, fpriv);
     File.Delete(fn);
-    Console.WriteLine("... and retrieves the previously generated KeyPair.");
+    Console.WriteLine("and retrieves the previously generated KeyPair from the HDD.");
 
     //4. Decrypted the PrivateKeyMaterial for Alice's PrivateKey.
     var mpw = SHA256.HashData(EcSettings.ToMasterKey(UserName));
@@ -152,7 +151,7 @@ public class AliceEcUser
     //5. Decrypt the Symmetric Key (SharedKey) with the Rsa-PrivateKey from Alice.
     var shared_key = EcService.DecryptionRsa(
       Convert.FromHexString(msg_package.CipherSharedKey), private_key_alice);
-    Console.WriteLine($"Alice decrypts the symmetric key with her Rsa-PrivateKey. ");
+    Console.WriteLine($"Alice can now decrypt the symmetric key with her Rsa PrivateKey.");
 
     //6. Decrypted the cipher from Bob with the Sharedkey.
     var split = msg_package.CipherMessage.Split(".");
@@ -170,7 +169,7 @@ public class AliceEcUser
 
     var signature = EcService.ToRsaSignedMessage(msg_package.SenderPublicKey,
       msg_package.Signature, decipher_hash);
-    Console.WriteLine("Now Alice can also verify Bob's digital signature.");
+    Console.WriteLine("Finally, Alice verifies the digital signature received from Bob.");
 
     var verify = EcService.VerifySignatureRsa(Encoding.UTF8.GetBytes(txt), signature);
     if (!verify) throw new CryptographicException($"{nameof(verify)} is failed!");
