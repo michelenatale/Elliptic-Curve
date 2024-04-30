@@ -23,7 +23,7 @@ public class BobEcUser
   private static void SampleRsaDsaBobAlice()
   {
     //1. Request temporary “Ec Public Key” from Alice.
-    var msg = "Hello Alice, please give me an RSA-Key. I would like to send you a message.";
+    var msg = "Bob writes to Alice: Hello Alice, please give me an RSA-Key. I would like to send you a message.";
     var rsa_public_key_pmei_alice = RsaPublicKeyRequest(msg);
     var rsa_public_key_alice = RsaPublicKey.FromRsaPublicKeyPmei(rsa_public_key_pmei_alice);
     var idx_pub_alice = rsa_public_key_alice.RsaIndex;
@@ -34,13 +34,13 @@ public class BobEcUser
     {
       RsaIndex = idx_pub_alice,  //Damit nachher bei Alice filename bekannt ist.
     };
-    Console.WriteLine("Bob generates a new RSA KeyPair (PrivateKey) and saves it on his hhd.");
+    Console.WriteLine("In the meantime, Bob has also had an Rsa KeyPair (PrivateKey) generated.");
 
-    //3. Create an temporary symmetric Key 
+    //3. Create an temporary symmetric Key (SharedKey)
     var shared_key = EcService.RngBytes(EcService.AES_GCM_MAX_KEY_SIZE);
-    Console.WriteLine("Bob generates a new key for symmetric encryption.");
+    Console.WriteLine("Bob can also generate a new key for symmetric encryption.");
 
-    //4. Encrypt Alice's 'secret message' with the 'Rsa Shared Key'.
+    //4. Encrypt Alice's 'secret message' with the 'SharedKey'.
     var associated = ""u8.ToArray();
     var secret_message_bob = "Hallo Alice. This is my secret message!"u8.ToArray();
     var cipher_msg = EcService.EncryptionAesGcm(secret_message_bob, shared_key, associated);
@@ -49,9 +49,9 @@ public class BobEcUser
               + Convert.ToHexString(cipher_msg).ToLower();
     Console.WriteLine("Bob encrypts his secret message with the new symmetric key.");
 
-    //5. Encryption the SharedKey wirth the Rsa PublicKey from Alice
+    //5. Encryption the SharedKey with the Rsa PublicKey from Alice
     var cipher_shared_key = EcService.EncryptionRsa(shared_key, rsa_public_key_alice.PublicKey);
-    Console.WriteLine("Bob encrypts his symmetric key with the PublicKey from Alice.");
+    Console.WriteLine("The symmetric key is subsequently encrypted with Alice's Rsa PublicKey.");
 
     //6. Sign the plain message from Bob. 
     var sign_bob = EcService.SignRsa(secret_message_bob, rsa_key_pair_bob.PrivateKey);
@@ -59,7 +59,7 @@ public class BobEcUser
       cipher_message, Convert.ToHexString(cipher_shared_key),
       sign_bob.Signature, sign_bob.PublicKey, idx_pub_alice,
       EcCryptionAlgorithm.AES_GCM);
-    Console.WriteLine("Bob digitally signs his secret message using the Rsa Sign Algorithm, and his Rsa-PrivateKey.");
+    Console.WriteLine("Finally, Bob signs his secret message with the 'Rsa Signing Algorithm' and his Rsa PrivateKey.");
 
     var (h, f) = PMEI.RsaSignaturPmeiHF();
     var pmei = PMEI.ToPmei(EcService.SerializeJson(message_package), h, f);
@@ -87,11 +87,11 @@ public class BobEcUser
   {
     Console.WriteLine(public_message);
     var (id, ecparam) = EcService.GenerateEcKeyPairSavePmei(UserName);
-    Console.WriteLine("Bob has generated a new KeyPair of elliptic curves (PrivateKey) and saved them.");
+    Console.WriteLine("Bob now generates a new KeyPair from elliptic curves (PrivateKey) and saves it.");
 
     var pupkey = new EcPublicKey((id, ecparam));
     var pmei = EcPublicKey.ToEcPublicKeyPmei(pupkey);
-    Console.WriteLine("With the new key pair, Bob derives a PublicKey and sends it directly to Alice.");
+    Console.WriteLine("With the new KeyPair, Bob derives a PublicKey and sends it directly to Alice.");
 
     var msg = $"Bob's message: Hello {username}, welcome. As requested, my temporary asymmetric key. ";
     return (pmei, msg);
@@ -101,18 +101,18 @@ public class BobEcUser
   public static bool ReceiveAMessage(string ecdsa_package)
   {
     //1.Notify Bob that a new message has arrived. 
-    Console.WriteLine($"Hello Bob, you have received a new message.");
+    Console.WriteLine($"Bob's system: Hello Bob, you have received a new message.");
 
     //2. Deserialize the package from Alice.
     var (hs, fs) = PMEI.EcSignaturPmeiHF(false);
     var pmei_bytes = PMEI.FromPmei(ecdsa_package, hs, fs);
     var msg_package = EcService.DeserializeJson<EcMessagePackage>(pmei_bytes.Message);
-    Console.WriteLine("Bob extracts the complete message from Alice from the Pmei protocol. ");
+    Console.WriteLine("Bob extracts the complete message from Alice from the Pmei protocol.");
 
     //3. Extract the PublicKey from Alice.
     var pub_key_alice = new EcPublicKey(msg_package!.SenderPublicKeyPmei);
     var index = pub_key_alice.EcIndex;
-    Console.WriteLine("Bob takes over the PublicKey from Alice ...");
+    Console.Write("Bob takes over the PublicKey from Alice ");
 
     //4. Load and extract the PrivateKeyMaterial from Bob from the original PMEI-KeyMaterial.
     var fp = EcSettings.ToEcCurrentFolderUser(UserName);
@@ -126,7 +126,7 @@ public class BobEcUser
     var sd = EcService.ToUserSystemData();
     var priv_key_original_bob = EcService.DecryptionWithEcCryptionAlgo(privkey, mpw, sd, EcCryptionAlgorithm.CHACHA20_POLY1305);
     var private_key_bob = EcParametersInfo.DeserializeEcParam(priv_key_original_bob);
-    Console.WriteLine("... and retrieves the previously generated KeyPair.");
+    Console.WriteLine("and retrieves the previously generated KeyPair (PrivateKey).");
 
     //6. Create the SharedKey from the PrivateKey of bob and the Publickey of Alice.
     var shared_key = EcService.ToSharedKey(private_key_bob, pub_key_alice.PublicKey);
@@ -148,7 +148,7 @@ public class BobEcUser
 
     var signature = EcService.ToEcSignedMessage(msg_package.SenderPublicKeyPmei,
       msg_package.Signature, decipher_hash);
-    Console.WriteLine("Now Bob can also verify Alice's digital signature.");
+    Console.WriteLine("Finally, Bob verifies the digital signature received from Alice.");
 
     var verify = EcService.VerifyEcDsa(signature);
     if (!verify) throw new CryptographicException($"{nameof(verify)} is failed!");
